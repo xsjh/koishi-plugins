@@ -34,11 +34,12 @@ export const usage = `
 <hr>
 <div class="version">
 <h3>Version</h3>
-<p>1.1.1</p>
+<p>1.1.2</p>
 <ul>
 <li>接入表情包api，为ask命令添加了发图功能</li>
 <li>删除了ask.update在线更新语录库的功能，使用本地语录库</li>
 <li>解决了语录库json文件的读取问题</li>
+<li>修改rank命令群名称显示问题</li>
 
 </ul>
 <hr>
@@ -538,7 +539,7 @@ function registerCommand(ctx, config) {
         //今日win人数
         const toll = newArr.length;
 
-        const output = `${guildName}（${processId(guildId, displayFullId)}）今日共有${toll}人赢了。\n` +
+        const output = `本群今日共有${toll}人赢了。\n` +
           `其中，赢级最高者是：${newArr[0][1]}（${newArr[0][0]})，其赢级为${newArr[0][2]}%；\n` +
           `最低者是：${newArr[toll - 1][1]}（${newArr[toll - 1][0]})，其赢级为${newArr[toll - 1][2]}%。\n` +
           `本群今日总win值的平均值为${averageValue.toFixed(2)}，中位数为${medianValue}，极差为${rangeValue}，方差为${varianceValue.toFixed(2)}，标准差为${standardDeviationValue.toFixed(2)}。`;
@@ -549,7 +550,7 @@ function registerCommand(ctx, config) {
 
       if (options.all) {
         //展示全部排行
-        let output = guildName + '（' + processId(guildId, displayFullId) + '）今日完整的赢级排行如下：\n';
+        let output = '本群今日完整的赢级排行如下：\n';
         let ranking = 1;
         newArr.forEach((item) => {
           let winLater = '';
@@ -565,14 +566,14 @@ function registerCommand(ctx, config) {
       let output = '';
       let ranking = 1;
       if (newArr.length > 5) {
-        output += guildName + '（' + processId(guildId, displayFullId) + '）' + '今日共有' + newArr.length + '人赢了，其前5名的赢级如下：\n'
+        output += '本群今日共有' + newArr.length + '人赢了，其前5名的赢级如下：\n'
         newArr.slice(0, 5).forEach((item) => {
           output += ' - ' + ranking + ': ' + item[1] + '（' + item[0] + '） ' + item[2] + '% \n';
           ranking++;
         });
         output += '……\n可使用选项-a或--all查看完整排行，以及选项-s或--statistics查看统计信息。'
       } else {
-        output = guildName + '（' + processId(guildId, displayFullId) + '）' + '今日共有' + newArr.length +'人赢了，其赢级如下：\n';
+        output = '本群今日共有' + newArr.length +'人赢了，其赢级如下：\n';
         newArr.forEach((item) => {
           output += ' - ' + ranking + ': ' + item[1] + '（' + item[0] + '） ' + item[2] + '% \n';
           ranking++;
@@ -669,7 +670,7 @@ function registerCommand(ctx, config) {
       help += '- 风口飞win：每日在9-21时中，随机抽取一小时作为风口，在风口时间内的首位win者可提高40%赢级。\n';
       help += '- 心心相win：若用户当日赢级与群中其他群友之和为99，则触发教授的祝福。\n';
       help += '可使用rank指令查看当日该群赢级排行，使用ask指令获取张教授对事物的评价。\n';
-      help += '更多使用说明请参看本插件的readme文件；遇到问题请在Koishi论坛的5378号帖子内反馈。';
+      help += '更多使用说明请参看本插件的readme文件；遇到问题请在Koishi论坛的10686号帖子内反馈。';
       session.sendQueued(help);
       return;
     });
