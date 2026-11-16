@@ -1,28 +1,4 @@
 
-name: Merge Koishi Repositories
-
-on:
-  workflow_dispatch:
-
-permissions:
-  contents: write
-
-jobs:
-  merge:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout destination repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
       - name: Discover and merge Koishi repositories
         env:
           GH_TOKEN: ${{ github.token }}
@@ -30,11 +6,24 @@ jobs:
         run: |
           set -euo pipefail
 
+          OWNER="xsjh"
+
+          # 获取仓库列表
           gh api --paginate \
-            "users/azi510/repos?per_page=100&type=owner" \
+            "users/$OWNER/repos?per_page=100" \
             --jq '.[] | select(.name | startswith("koishi")) | [.name, .default_branch] | @tsv' \
             > /tmp/koishi-repos.txt
 
+          echo "发现以下 Koishi 仓库："
+          cat /tmp/koishi-repos.txt
+
+          # 避免未发现仓库时错误地显示成功
+          if [ ! -s /tmp/koishi-repos.txt ]; then
+            echo "::error::未找到 Koishi 仓库，请检查用户名和 API 权限"
+            exit 1
+          fi
+
+          # 依次导入，保留完整提交历史
           while IFS=$'\t' read -r repo branch; do
             [ -n "$repo" ] || continue
 
@@ -43,19 +32,15 @@ jobs:
             fi
 
             if [ -d "$repo" ]; then
-              echo "Skipping existing directory: $repo"
+              echo "已存在，跳过：$repo"
               continue
             fi
 
-            echo "Merging $repo from branch $branch"
+            echo "正在合并：$OWNER/$repo"
 
             git subtree add \
               --prefix="$repo" \
-              "https://github.com/azi510/$repo.git" \
+              "https://github.com/$OWNER/$repo.git" \
               "$branch"
 
           done < /tmp/koishi-repos.txt
-
-      - name: Push merged repositories
-        run: |
-          git push origin HEAD:${{ github.event.repository.default_branch }}
