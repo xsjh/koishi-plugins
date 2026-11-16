@@ -1,2 +1,2 @@
-# koishi--plugins
+# koishi-plugins
 plugins for koishi
