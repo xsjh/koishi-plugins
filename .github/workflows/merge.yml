@@ -1,4 +1,29 @@
 
+name: Merge Koishi Repositories
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout destination repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      
       - name: Discover and merge Koishi repositories
         env:
           GH_TOKEN: ${{ github.token }}
@@ -44,3 +69,8 @@
               "$branch"
 
           done < /tmp/koishi-repos.txt
+
+
+      - name: Push merged repositories
+        run: |
+          git push origin HEAD:${{ github.event.repository.default_branch }}
