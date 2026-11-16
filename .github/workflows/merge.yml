@@ -1,0 +1,61 @@
+
+name: Merge Koishi Repositories
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout destination repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Discover and merge Koishi repositories
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh api --paginate \
+            "users/azi510/repos?per_page=100&type=owner" \
+            --jq '.[] | select(.name | startswith("koishi")) | [.name, .default_branch] | @tsv' \
+            > /tmp/koishi-repos.txt
+
+          while IFS=$'\t' read -r repo branch; do
+            [ -n "$repo" ] || continue
+
+            if [ "$repo" = "koishi-plugins" ]; then
+              continue
+            fi
+
+            if [ -d "$repo" ]; then
+              echo "Skipping existing directory: $repo"
+              continue
+            fi
+
+            echo "Merging $repo from branch $branch"
+
+            git subtree add \
+              --prefix="$repo" \
+              "https://github.com/azi510/$repo.git" \
+              "$branch"
+
+          done < /tmp/koishi-repos.txt
+
+      - name: Push merged repositories
+        run: |
+          git push origin HEAD:${{ github.event.repository.default_branch }}
